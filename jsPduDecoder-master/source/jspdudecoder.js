@@ -212,13 +212,10 @@ function tokenizer (octets) {
 
   // smsc part
   var smscLength = parseInt(octets[0], 16)
-  console.log('SMSCLength:', 0, smscLength)
 
   if (smscLength) {
     var sliceSmsc = octets.slice(2, smscLength + 1)
-    console.log('SMSC:', sliceSmsc)
     var sliceSmscToA = octets[1]
-    console.log('SMSCtoA:', 1, sliceSmscToA)
     tokenList.push(function () { return '(hideable)SMSC number\t' + tokens.Number(sliceSmsc, undefined, tokens.ToA(sliceSmscToA)) })
     tokenList.push(function () { return '(hideable)SMSC number info\t' + tokens.ToA(sliceSmscToA).info })
   }
@@ -226,7 +223,6 @@ function tokenizer (octets) {
   // Sender/Receiver part
   pos = smscLength + 1
   var pduType = tokens.ToM(octets[ pos ])
-  console.log('pduType:', pos, octets[pos])
   tokenList.push(function () { return '(hideable)PDU Type\t' + pduType.info })
 
   if (pduType.type === 'deliver') {
@@ -262,14 +258,11 @@ function tokenizer (octets) {
 
     pos++
     numberLength = parseInt(octets[ pos ], 16)
-    console.log('NumberLength:', pos, octets[pos])
 
     pos++
     if (numberLength) {
       sliceNumber = octets.slice(pos + 1, pos + 1 + Math.ceil(numberLength / 2))
       sliceNumberToA = octets[ pos ]
-      console.log('sliceNumber:', pos + 1, pos + 1 + Math.ceil(numberLength / 2), sliceNumber)
-      console.log('sliceNumbertoA:', pos, sliceNumberToA)
       tokenList.push(function () { return '(hideable)Number\t' + tokens.Number(sliceNumber, numberLength, tokens.ToA(sliceNumberToA)) })
       tokenList.push(function () { return '(hideable)Number info\t' + tokens.ToA(sliceNumberToA).info })
 
@@ -280,7 +273,6 @@ function tokenizer (octets) {
     tokenList.push(function () { return '(hideable)Protocol Identifier\t' + tokens.PID(TP_PID) })
 
     pos++
-    console.log('DCS:', pos, octets[pos])
     TP_DCS = tokens.DCS(octets[ pos ])
     tokenList.push(function () { return '(hideable)Data Coding Scheme\t' + TP_DCS.info })
 
@@ -288,12 +280,10 @@ function tokenizer (octets) {
       pos++
       var sliceVP
       if (pduType.TP_VPF === 'relative') {
-        console.log('sliceVP:', pos, octets[pos])
         sliceVP = octets[ pos ]
         tokenList.push(function () { return '(hideable)Validity Period\t' + tokens.VPrelative(sliceVP) })
       } else if (pduType.TP_VPF.match(/^(absolute|relative)$/)) {
         sliceVP = octets.slice(pos, pos + 7)
-        console.log('sliceVP:', pos, sliceVP)
         tokenList.push(function () { return '(hideable)Validity Period\tuntil ' + tokens.SCTS(sliceVP) })
         pos += 6
       }
@@ -301,7 +291,6 @@ function tokenizer (octets) {
   }
 
   pos++
-  console.log('UDL:', pos, octets[ pos ])
   var TP_UDL = tokens.UDL(octets[ pos ], TP_DCS.alphabet)
   tokenList.push(function () { return 'User Data Length\t' + TP_UDL.info })
 
@@ -309,7 +298,6 @@ function tokenizer (octets) {
   var TP_UDH = {}
   if (pduType.TP_UDHI) {
     pos++
-    console.log('UDLL:', pos, octets[ pos ])
     TP_UDHL = tokens.UDHL(octets[ pos ], TP_DCS.alphabet)
     tokenList.push(function () { return 'User Data Header Length\t' + TP_UDHL.info })
 
@@ -322,7 +310,6 @@ function tokenizer (octets) {
   pos++
   var expectedMsgEnd = pos + TP_UDL.octets - (TP_UDHL.length ? TP_UDHL.length + 1 : 0)
   var sliceMessage = octets.slice(pos, expectedMsgEnd)
-  console.log(sliceMessage)
 
   if (TP_UDH.wap) {
     var wapMessage = wapDecoder(sliceMessage)
@@ -1213,7 +1200,6 @@ var tokens = {
      * @returns {string} the readable content of the given octets.
      */
 function decode7Bit (octets, padding) {
-  console.log(octets, padding)
   var thisAndNext; var thisChar; var character
 
   var nextChar = ''
@@ -1223,7 +1209,6 @@ function decode7Bit (octets, padding) {
   if (padding && octets.length) {
     nextChar = padwZeros(parseInt(octets.shift(), 16).toString(2))
     nextChar = nextChar.substring(0, nextChar.length - padding)
-    console.log(nextChar)
   }
 
   while (octets.length || parseInt(nextChar, 2)) {
