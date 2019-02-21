@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
+
+	"github.com/xlab/at/sms"
 
 	"github.com/vinhjaxt/pdudecoder"
 )
@@ -41,7 +44,60 @@ var pdus = []string{
 }
 
 func TestDecoder(t *testing.T) {
-	for _, pdu := range pdus {
+	msg := &sms.Message{
+		Address:              "+84902107790",
+		Encoding:             sms.Encodings.Gsm7Bit,
+		ServiceCenterAddress: "+84902107790",
+		ServiceCenterTime:    sms.Timestamp(time.Now()),
+		Type:                 sms.MessageTypes.Submit,
+		VP:                   sms.ValidityPeriod(time.Duration(24) * time.Hour),
+		VPFormat:             sms.ValidityPeriodFormats.Relative,
+		Text:                 "vinh 889200009F50406D0B11B0C00009120221041658249D17A1EB44687C768D0185D0F83C861F719B4CE83E67510B9EE3E83CEEF34683A7381ACF53488FD769F41EB74B90DA2CBC3207638ED02x123",
+	}
+	_, bs, _ := msg.PDU()
+	pdus = append(pdus, hex.EncodeToString(bs))
+
+	msg = &sms.Message{
+		Address:              "170",
+		Encoding:             sms.Encodings.Gsm7Bit_2,
+		ServiceCenterAddress: "84902107790",
+		ServiceCenterTime:    sms.Timestamp(time.Now()),
+		Type:                 sms.MessageTypes.Submit,
+		VP:                   sms.ValidityPeriod(time.Duration(4) * time.Hour * 24),
+		VPFormat:             sms.ValidityPeriodFormats.Relative,
+		Text:                 "vinh 889200009F50406D0B11B0C00009120221041658249D17A1EB44687C768D0185D0F83C861F719B4CE83E67510B9EE3E83CEEF34683A7381ACF53488FD769F41EB74B90DA2CBC3207638ED02x123",
+	}
+	_, bs, _ = msg.PDU()
+	pdus = append(pdus, hex.EncodeToString(bs))
+
+	msg = &sms.Message{
+		Address:              "170",
+		Encoding:             sms.Encodings.UCS2,
+		ServiceCenterAddress: "84902107790",
+		ServiceCenterTime:    sms.Timestamp(time.Now()),
+		Type:                 sms.MessageTypes.Deliver,
+		VP:                   sms.ValidityPeriod(time.Duration(4) * time.Hour * 24 * 7),
+		VPFormat:             sms.ValidityPeriodFormats.Relative,
+		Text:                 "vinh 889200009F50406D0B11B0C00009120221041658249D17A1EB44687C768D0185D0F83C861F719B4CE83E67510B9EE3E83CEEF34683A7381ACF53488FD769F41EB74B90DA2CBC3207638ED02x123",
+	}
+	_, bs, _ = msg.PDU()
+	pdus = append(pdus, hex.EncodeToString(bs))
+
+	msg = &sms.Message{
+		Address:              "170",
+		Encoding:             sms.Encodings.UCS2,
+		ServiceCenterAddress: "84902107790",
+		ServiceCenterTime:    sms.Timestamp(time.Now()),
+		Type:                 sms.MessageTypes.Deliver,
+		VP:                   sms.ValidityPeriod(time.Duration(4) * time.Hour * 24 * 7),
+		VPFormat:             sms.ValidityPeriodFormats.Relative,
+		Text:                 "vịnh dương hí hí",
+	}
+	_, bs, _ = msg.PDU()
+	pdus = append(pdus, hex.EncodeToString(bs))
+
+	for i, pdu := range pdus {
+		log.Println(i, pdu)
 		bs, err := hex.DecodeString(pdu)
 		if err != nil {
 			log.Println(err)

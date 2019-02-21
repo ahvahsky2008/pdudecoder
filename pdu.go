@@ -268,10 +268,6 @@ func Decode(octets []byte) (msg *Message, err error) {
 	pos++
 
 	var tpUDL = UserDataLength(octets[pos], tpDCS)
-	var msgLength = int(octets[pos])
-	if tpDCS == DCSUC2 {
-		msgLength /= 2
-	}
 
 	var tpUDHL int
 	if pduTypeByte&0x40 != 0 {
@@ -296,31 +292,27 @@ func Decode(octets []byte) (msg *Message, err error) {
 		var nextSeptetStart = int(math.Ceil(float64(udhBitLength)/7) * 7)
 
 		paddingUDHL = uint8(nextSeptetStart - udhBitLength)
-		msgLength -= lengthUDHL + 1
 	}
 	pos++
 
 	var expectedMsgEnd = pos + tpUDL - lengthUDHL
 	var sliceMessage = octets[pos:expectedMsgEnd]
+	var messageLength = len(octets)
 	userData, err := UserData(sliceMessage, tpDCS, paddingUDHL)
 	if err != nil {
 		return nil, err
 	}
 
-	if expectedMsgEnd < len(octets) {
+	if expectedMsgEnd == messageLength {
+	} else if expectedMsgEnd < messageLength {
 		//PDU longer than expected
-		var sliceMessageAll = octets[pos:len(octets)]
-		plusData, _ := UserData(sliceMessageAll, tpDCS, 0)
-		userData += plusData
-	} else if expectedMsgEnd > len(octets) {
+		var sliceMessageAll = octets[pos:messageLength]
+		userData, _ = UserData(sliceMessageAll, tpDCS, 0)
+	} else {
 		// PDU shorter than expected
 	}
 
-	if len(userData) > msgLength {
-		msg.Text = userData[0:msgLength]
-	} else {
-		msg.Text = userData
-	}
+	msg.Text = userData
 
 	return msg, nil
 }
