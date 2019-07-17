@@ -28,6 +28,7 @@ type Message struct {
 	Text              string
 	PartNumber        uint8
 	TotalParts        uint8
+	MessageNum        uint8
 }
 
 func blocks(n, block int) int {
@@ -279,6 +280,7 @@ func Decode(octets []byte) (msg *Message, err error) {
 			if IE.IEI == 0 {
 				msg.PartNumber = IE.IED[2]
 				msg.TotalParts = IE.IED[1]
+				msg.MessageNum = IE.IED[0]
 			}
 		}
 		pos += tpUDHL - 1
